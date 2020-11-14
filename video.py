@@ -39,12 +39,13 @@ ret, img = cap.read()
 
 
 def speak(text):
-    tts = gTTS(text=text, lang='ko')
+    #tts = gTTS(text=text, lang='ko')
     filename = 'voice.mp3'
-    tts.save(filename)
+    #tts.save(filename)
     playsound(filename)
 
 def noticeStart():
+    global noticecoolTime
     global noticeturn
     global noticecoolPower
     if noticeturn == 0:
@@ -56,6 +57,7 @@ def noticeStart():
         print('[MaskAi] 마스크 미착용 알림 준비중입니다.')
         #re = requests.post(url, data=data)
         print('[MaskAi] 선생님께 마스크 미착용 메세지가 전송되었습니다.')
+        noticecoolTime = str(time.time()).split(".")[0]
         noticecoolPower = False
     elif noticeturn == 1:
         
@@ -69,6 +71,7 @@ def noticeStart():
             print('[MaskAi] 마스크 미착용 알림 준비중입니다.')
             #re = requests.post(url, data=data)
             print('[MaskAi] 선생님께 마스크 미착용 메세지가 전송되었습니다.')
+            noticecoolTime = str(time.time()).split(".")[0]
             noticecoolPower = False
         
         #tts = gTTS(text='please wear a mask', lang='en')
