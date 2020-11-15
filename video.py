@@ -14,6 +14,17 @@ import requests
 import threading
 from gtts import gTTS
 import speech_recognition as sr
+from twilio.rest import Client
+
+
+# Your Account Sid and Auth Token from twilio.com/console
+# and set the environment variables. See http://twil.io/secure
+account_sid = 'ACd30462945303ace7ecab19130390413f'
+auth_token = '3782692238f888911572efe1b530ab95'
+client = Client(account_sid, auth_token)
+
+
+
 
 
 
@@ -44,6 +55,16 @@ def speak():
     #tts.save(filename)
     playsound(filename)
 
+def SMS():
+    message = client.messages \
+                .create(
+                     body="\n우리집구역에서 마스크 미착용학생이 감지되었습니다.",
+                     from_='+13158093845',
+                     to='+821074517300'
+                 )
+
+    print(message.sid)
+
 
     
 def noticeStart():
@@ -60,6 +81,12 @@ def noticeStart():
         noticecoolPower = False
         print('[MaskAi] 마스크 미착용감 알림 전송 준비중입니다.')
         #re = requests.post(url, data=data)
+        message = client.messages \
+                .create(
+                     body="\n우리집구역에서 마스크 미착용학생이 감지되었습니다.",
+                     from_='+13158093845',
+                     to='+821074517300'
+                 )
         print('[MaskAi] 선생님께 마스크 미착용감지 메세지가 전송되었습니다.')
         noticecoolTime = str(time.time()).split(".")[0]
         noticecoolPower = False
@@ -78,11 +105,18 @@ def noticeStart():
             noticecoolPower = False
             print('[MaskAi] 마스크 미착용감지 알림 전송 준비중입니다.')
             #re = requests.post(url, data=data)
+            message = client.messages \
+                .create(
+                     body="\n우리집구역에서 마스크 미착용학생이 감지되었습니다.",
+                     from_='+13158093845',
+                     to='+821074517300'
+                 )
+            print(message.sid)
             print('[MaskAi] 선생님께 마스크 미착용감지 메세지가 전송되었습니다.')
             noticecoolTime = str(time.time()).split(".")[0]
             noticecoolPower = False
             
-     
+    
 def maskRender():
     global nomaskAmount
     global nomaskcoolPower
