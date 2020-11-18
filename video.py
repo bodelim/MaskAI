@@ -6,7 +6,6 @@ from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.models import load_model
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 import os
 from playsound import playsound
 import time
@@ -30,8 +29,9 @@ client = Client(account_sid, auth_token)
 
 
 
-url = "https://maker.ifttt.com/trigger/MaskNotice/with/key/c4CPrrPzQibURECdA5f2JC"
-data = {'value1': '1층로비', 'value2': '구역에서 마스크 미착용학생이 감지되었습니다.', 'value3': '+8201074517300'}
+#url = "https://maker.ifttt.com/trigger/MaskNotice/with/key/c4CPrrPzQibURECdA5f2JC"
+url = "https://maker.ifttt.com/trigger/MaskAINoticeService/with/key/kWrAKkBJ_9ptVQgkk01Oby55PWPuOsxQct2TjYkfA3D"
+data = {'value1': '[Web발신] MaskAI\n급식실구역에서 마스크 미착용학생이 감지되었습니다.', 'value2': '+8201049988566'}
 
 
 nomaskAmount = 0
@@ -48,9 +48,10 @@ model = load_model('models/mask_detector.model')
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()
 
+print("[MaskAi] 프로그램이 실행되었습니다. 곧 카메라가 켜집니다.")
 
 def speak():
-    #tts = gTTS(text=text, lang='ko')
+    #tts = gTTS(text="마스크 착용을 잊으셨군요? 우리 함께 코로나를 이겨내요", lang='ko')
     filename = 'voice.mp3'
     #tts.save(filename)
     playsound(filename)
@@ -58,9 +59,9 @@ def speak():
 def SMS():
     message = client.messages \
                 .create(
-                     body="\n우리집구역에서 마스크 미착용학생이 감지되었습니다.",
+                     body="\n급식실구역에서 마스크 미착용학생이 감지되었습니다.",
                      from_='+13158093845',
-                     to='+821074517300'
+                     to='+821040624155'
                  )
 
     print(message.sid)
@@ -79,14 +80,14 @@ def noticeStart():
         thread_tts = threading.Thread(target=speak)
         thread_tts.start()
         noticecoolPower = False
-        print('[MaskAi] 마스크 미착용감 알림 전송 준비중입니다.')
-        #re = requests.post(url, data=data)
-        message = client.messages \
-                .create(
-                     body="\n우리집구역에서 마스크 미착용학생이 감지되었습니다.",
-                     from_='+13158093845',
-                     to='+821074517300'
-                 )
+        print('[MaskAi] 마스크 미착용감지 알림 전송 준비중입니다.')
+        re = requests.post(url, data=data)
+        #message = client.messages \
+         #       .create(
+          #           body="\n급식실구역에서 마스크 미착용학생이 감지되었습니다.",
+           #          from_='+821040624155',
+            #         to='+821074517300'
+             #    )
         print('[MaskAi] 선생님께 마스크 미착용감지 메세지가 전송되었습니다.')
         noticecoolTime = str(time.time()).split(".")[0]
         noticecoolPower = False
@@ -104,14 +105,14 @@ def noticeStart():
             thread_tts.start()
             noticecoolPower = False
             print('[MaskAi] 마스크 미착용감지 알림 전송 준비중입니다.')
-            #re = requests.post(url, data=data)
-            message = client.messages \
-                .create(
-                     body="\n우리집구역에서 마스크 미착용학생이 감지되었습니다.",
-                     from_='+13158093845',
-                     to='+821074517300'
-                 )
-            print(message.sid)
+            re = requests.post(url, data=data)
+            #message = client.messages \
+             #   .create(
+              #       body="\n급식실구역에서 마스크 미착용학생이 감지되었습니다.",
+               #      from_='+13158093845',
+                #     to='+821074517300'
+                 #)
+            #print(message.sid)
             print('[MaskAi] 선생님께 마스크 미착용감지 메세지가 전송되었습니다.')
             noticecoolTime = str(time.time()).split(".")[0]
             noticecoolPower = False
@@ -124,7 +125,6 @@ def maskRender():
     global maskokAmount
     global noticecoolPower
     global noticecoolTime
-    global out
     
     
     while cap.isOpened():
@@ -134,7 +134,7 @@ def maskRender():
 
         h, w = img.shape[:2]
 
-        blob = cv2.dnn.blobFromImage(img, scalefactor=1., size=(500, 500), mean=(104., 177., 123.))
+        blob = cv2.dnn.blobFromImage(img, scalefactor=1., size=(300, 300), mean=(104., 177., 123.))
         facenet.setInput(blob)
 
         #결과추론단계
@@ -145,8 +145,9 @@ def maskRender():
 
         for i in range(dets.shape[2]):
             #결과의 정확성
-            confidence = dets[0, 0, i, 2]
-            if confidence < 0.5:
+            
+            reliability = dets[0, 0, i, 2]
+            if reliability < 0.5:
                 continue
 
             x1 = int(dets[0, 0, i, 3] * w)
@@ -158,7 +159,7 @@ def maskRender():
             face = img[y1:y2, x1:x2]
 
             try:
-                face_input = cv2.resize(face, dsize=(230, 230))
+                face_input = cv2.resize(face, dsize=(224, 224))
                 #RGB -> BGR 변환
                 face_input = cv2.cvtColor(face_input, cv2.COLOR_BGR2RGB)
                 face_input = preprocess_input(face_input)
@@ -204,5 +205,4 @@ def maskRender():
 thread_render = threading.Thread(target=maskRender)
 thread_render.start()
 
-our.release()
 cap.release()
