@@ -205,4 +205,5 @@ def maskRender():
 thread_render = threading.Thread(target=maskRender)
 thread_render.start()
 
+out.release()
 cap.release()
